@@ -1,4 +1,5 @@
 # stdlib
+from pathlib import Path
 from typing import Any, Callable, List, Optional, Tuple
 
 # third party
@@ -16,6 +17,7 @@ import synthcity.logger as log
 from synthcity.metrics.weighted_metrics import WeightedMetrics
 from synthcity.utils.constants import DEVICE
 from synthcity.utils.reproducibility import clear_cache, enable_reproducible_results
+from synthcity.utils.serialization import save_to_file
 
 # synthcity relative
 from .mlp import MLP
@@ -121,6 +123,8 @@ class GAN(nn.Module):
         n_features: int,
         n_units_latent: int,
         n_units_conditional: int = 0,
+        workspace: Path = Path("workspace"),
+        plugin_name: str = None,
         # generator
         generator_n_layers_hidden: int = 2,
         generator_n_units_hidden: int = 250,
@@ -154,6 +158,7 @@ class GAN(nn.Module):
         dataloader_sampler: Optional[sampler.Sampler] = None,
         device: Any = DEVICE,
         n_iter_min: int = 100,
+        n_save_every: int = 50,
         n_iter_print: int = 10,
         patience: int = 20,
         patience_metric: Optional[WeightedMetrics] = None,
@@ -180,6 +185,8 @@ class GAN(nn.Module):
         self.n_features = n_features
         self.n_units_latent = n_units_latent
         self.n_units_conditional = n_units_conditional
+        self.workspace = workspace
+        self.plugin_name = plugin_name
 
         self.generator = MLP(
             task_type="regression",
@@ -638,6 +645,14 @@ class GAN(nn.Module):
                     if patience >= self.patience and i >= self.n_iter_min:
                         log.debug(f"[{i}/{self.generator_n_iter}] Early stopping")
                         break
+
+            if (i + 1) % self.n_save_every == 0:
+                save_path = (
+                    self.workspace
+                    / f'checkpoints/{self.plugin_name}/epoch_{i+1}.pkl'
+                )
+                save_to_file(save_path, self)
+                
 
         if best_state_dict is not None:
             self.load_state_dict(best_state_dict)

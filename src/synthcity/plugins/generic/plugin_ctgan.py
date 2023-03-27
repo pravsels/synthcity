@@ -129,6 +129,7 @@ class CTGANPlugin(Plugin):
         device: Any = DEVICE,
         patience: int = 5,
         patience_metric: Optional[WeightedMetrics] = None,
+        n_save_every: int = 50,
         n_iter_print: int = 50,
         n_iter_min: int = 100,
         adjust_inference_sampling: bool = False,
@@ -181,6 +182,7 @@ class CTGANPlugin(Plugin):
         self.patience_metric = patience_metric
         self.n_iter_min = n_iter_min
         self.n_iter_print = n_iter_print
+        self.n_save_every = n_save_every
         self.adjust_inference_sampling = adjust_inference_sampling
 
     @staticmethod
@@ -239,6 +241,8 @@ class CTGANPlugin(Plugin):
         self.model = TabularGAN(
             X.dataframe(),
             cond=cond,
+            plugin_name=self.name(),
+            workspace=self.workspace,
             n_units_latent=self.generator_n_units_hidden,
             batch_size=self.batch_size,
             generator_n_layers_hidden=self.generator_n_layers_hidden,
@@ -273,6 +277,7 @@ class CTGANPlugin(Plugin):
             patience_metric=self.patience_metric,
             n_iter_min=self.n_iter_min,
             n_iter_print=self.n_iter_print,
+            n_save_every=self.n_save_every,
             adjust_inference_sampling=self.adjust_inference_sampling,
         )
         self.model.fit(X.dataframe(), cond=cond)

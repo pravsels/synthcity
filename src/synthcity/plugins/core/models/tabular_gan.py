@@ -1,4 +1,5 @@
 # stdlib
+from pathlib import Path
 from typing import Any, Callable, Optional, Union
 
 # third party
@@ -127,6 +128,8 @@ class TabularGAN(torch.nn.Module):
         X: pd.DataFrame,
         n_units_latent: int,
         cond: Optional[Union[pd.DataFrame, pd.Series, np.ndarray]] = None,
+        workspace: Path = Path("workspace"),
+        plugin_name: str = 'tabular_gan',
         generator_n_layers_hidden: int = 2,
         generator_n_units_hidden: int = 150,
         generator_nonlin: str = "leaky_relu",
@@ -161,6 +164,7 @@ class TabularGAN(torch.nn.Module):
         device: Any = DEVICE,
         patience: int = 10,
         patience_metric: Optional[WeightedMetrics] = None,
+        n_save_every: int = 50,
         n_iter_print: int = 50,
         n_iter_min: int = 100,
         adjust_inference_sampling: bool = False,
@@ -265,6 +269,8 @@ class TabularGAN(torch.nn.Module):
 
         self.model = GAN(
             self.encoder.n_features(),
+            workspace=workspace,
+            plugin_name=plugin_name,
             n_units_latent=n_units_latent,
             n_units_conditional=n_units_conditional,
             batch_size=batch_size,
@@ -296,6 +302,7 @@ class TabularGAN(torch.nn.Module):
             lambda_gradient_penalty=lambda_gradient_penalty,
             lambda_identifiability_penalty=lambda_identifiability_penalty,
             clipping_value=clipping_value,
+            n_save_every=n_save_every,
             n_iter_print=n_iter_print,
             random_state=random_state,
             # early stopping
